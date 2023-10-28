@@ -4,7 +4,6 @@ import 'package:weatherapps/cubit/weather_cubit.dart';
 import 'package:weatherapps/cubit/weather_page_state.dart';
 import 'package:weatherapps/screens/search_page.dart';
 import 'package:weatherapps/screens/weather_results_page.dart';
-
 void main() {
   runApp(const MyApp());
 }
