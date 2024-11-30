@@ -7,11 +7,16 @@ import 'package:weatherapps/cubit/weather_cubit.dart';
 import 'package:weatherapps/cubit/weather_page_state.dart';
 import 'package:weatherapps/screens/weather_results_page.dart';
 
-class SearchPage extends StatelessWidget {
+class SearchPage extends StatefulWidget {
   SearchPage({super.key});
   static const String id = "search";
-  String? cityName;
-  final GlobalKey<FormState> formKey = GlobalKey();
+
+  @override
+  State<SearchPage> createState() => _SearchPageState();
+}
+
+class _SearchPageState extends State<SearchPage> {
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -19,6 +24,12 @@ class SearchPage extends StatelessWidget {
       listener: (context, state) {},
       builder: (context, state) {
         return Scaffold(
+          extendBodyBehindAppBar: true,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            title: const Text('Search Location'),
+          ),
           body: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -32,133 +43,121 @@ class SearchPage extends StatelessWidget {
               ),
             ),
             child: SafeArea(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const SizedBox(height: 40),
-                      Text(
-                        'Weather Forecast',
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineMedium
-                            ?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                        textAlign: TextAlign.center,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      const SizedBox(height: 20),
-                      Lottie.network(
-                        'https://assets3.lottiefiles.com/packages/lf20_kljxfos1.json',
-                        height: 200,
-                      ),
-                      const SizedBox(height: 40),
-                      Form(
-                        key: formKey,
-                        child: Column(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical: 8.0,
+                        ),
+                        child: Row(
                           children: [
-                            TextFormField(
-                              style: const TextStyle(color: Colors.white),
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return "Please enter a city name";
-                                }
-                                return null;
-                              },
-                              onChanged: (value) {
-                                cityName = value;
-                              },
-                              decoration: InputDecoration(
-                                filled: true,
-                                fillColor: Colors.white.withOpacity(0.2),
-                                hintText: "Enter city name",
-                                hintStyle: TextStyle(
-                                    color: Colors.white.withOpacity(0.7)),
-                                prefixIcon: const Icon(Icons.location_city,
-                                    color: Colors.white),
-                                suffixIcon: IconButton(
-                                  onPressed: () => _searchWeather(context),
-                                  icon: const Icon(Icons.search,
-                                      color: Colors.white),
+                            Expanded(
+                              child: TextField(
+                                controller: _searchController,
+                                decoration: const InputDecoration(
+                                  hintText: 'Enter city name',
+                                  border: InputBorder.none,
+                                  icon: Icon(Icons.search),
                                 ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                  borderSide: BorderSide.none,
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                  borderSide: BorderSide.none,
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                  borderSide:
-                                      const BorderSide(color: Colors.white),
-                                ),
-                                errorBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                  borderSide: BorderSide(
-                                      color:
-                                          Theme.of(context).colorScheme.error),
-                                ),
+                                onSubmitted: (value) => _searchWeather(),
                               ),
                             ),
-                            const SizedBox(height: 24),
-                            ElevatedButton.icon(
-                              onPressed: () => _searchWeather(context),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor:
-                                    Theme.of(context).colorScheme.primary,
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 32, vertical: 16),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
+                            if (_searchController.text.isNotEmpty)
+                              IconButton(
+                                icon: const Icon(Icons.clear),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  setState(() {});
+                                },
                               ),
-                              icon: const Icon(Icons.search),
-                              label: const Text(
-                                "Search Weather",
-                                style: TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.bold),
-                              ),
-                            ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 20),
-                      TextButton.icon(
-                        onPressed: () async {
-                          // Get current location weather
-                          try {
-                            await BlocProvider.of<WeatherCubit>(context)
-                                .getCurrentLocationWeather();
-                            if (context.mounted) {
-                              Navigator.pushNamed(context, WeatherResults.id);
-                            }
-                          } catch (e) {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                      'Error getting current location weather'),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                            }
-                          }
-                        },
-                        icon:
-                            const Icon(Icons.my_location, color: Colors.white),
-                        label: const Text(
-                          'Use Current Location',
-                          style: TextStyle(color: Colors.white),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        context.read<WeatherCubit>().getCurrentLocationWeather();
+                        Navigator.pushNamed(context, WeatherResults.id);
+                      },
+                      icon: const Icon(Icons.my_location),
+                      label: const Text('Use Current Location'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.all(16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 32),
+                    Text(
+                      'Popular Cities',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            color: Colors.white,
+                          ),
+                    ),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: GridView.count(
+                        crossAxisCount: 2,
+                        mainAxisSpacing: 16,
+                        crossAxisSpacing: 16,
+                        children: [
+                          _buildPopularCityCard(
+                            context, 
+                            'Gaza', 
+                            '🇵🇸',
+                            'Stand with Palestine',
+                            Colors.green,
+                          ),
+                          _buildPopularCityCard(
+                            context, 
+                            'Cairo', 
+                            '🇪🇬',
+                            'City of a Thousand Minarets',
+                            Colors.red,
+                          ),
+                          _buildPopularCityCard(
+                            context, 
+                            'Mecca', 
+                            '🇸🇦',
+                            'The Holy City',
+                            Colors.green,
+                          ),
+                          _buildPopularCityCard(
+                            context, 
+                            'Jerusalem', 
+                            '🇵🇸',
+                            'City of Peace',
+                            Colors.blue,
+                          ),
+                          _buildPopularCityCard(
+                            context, 
+                            'Dubai', 
+                            '🇦🇪',
+                            'City of Gold',
+                            Colors.amber,
+                          ),
+                          _buildPopularCityCard(
+                            context, 
+                            'Istanbul', 
+                            '🇹🇷',
+                            'Where East Meets West',
+                            Colors.red,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -168,24 +167,81 @@ class SearchPage extends StatelessWidget {
     );
   }
 
-  void _searchWeather(BuildContext context) async {
-    if (formKey.currentState!.validate()) {
-      try {
-        await BlocProvider.of<WeatherCubit>(context)
-            .getCurrentWeather(cityName!);
-        if (context.mounted) {
-          Navigator.pushNamed(context, WeatherResults.id);
-        }
-      } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Error fetching weather data'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
+  void _searchWeather() async {
+    try {
+      await BlocProvider.of<WeatherCubit>(context)
+          .getCurrentWeather(_searchController.text);
+      if (context.mounted) {
+        Navigator.pushNamed(context, WeatherResults.id);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error fetching weather data'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
+  }
+
+  Widget _buildPopularCityCard(BuildContext context, String city, String flag, String description, Color accentColor) {
+    return InkWell(
+      onTap: () {
+        _searchController.text = city;
+        _searchWeather();
+      },
+      child: Card(
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                accentColor.withOpacity(0.6),
+                accentColor.withOpacity(0.3),
+              ],
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  flag,
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  city,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.white70,
+                      ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

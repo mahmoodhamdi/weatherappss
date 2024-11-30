@@ -10,7 +10,7 @@ class WeatherModel {
   final String? humidity;
   final String? windSpeed;
   final String? feelsLike;
-  final String? uvIndex;
+  final String? uv;
   final List<HourlyForecast>? hourlyForecast;
 
   WeatherModel({
@@ -25,7 +25,7 @@ class WeatherModel {
     this.humidity,
     this.windSpeed,
     this.feelsLike,
-    this.uvIndex,
+    this.uv,
     this.hourlyForecast,
   });
 
@@ -54,7 +54,7 @@ class WeatherModel {
       humidity: current['humidity']?.toString(),
       windSpeed: current['wind_kph']?.toString(),
       feelsLike: current['feelslike_c']?.toString(),
-      uvIndex: current['uv']?.toString(),
+      uv: current['uv']?.toString(),
       hourlyForecast: hourlyForecasts,
     );
   }
