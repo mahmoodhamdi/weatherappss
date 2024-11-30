@@ -17,16 +17,32 @@ class WeatherCubit extends Cubit<WeatherState> {
       temp: "temp",
       conditionText: "conditionText");
   Future<WeatherModel> getCurrentWeather(String cityName) async {
+    emit(WeatherLoadingState());
     try {
       weatherModel = await WeatherService(dio: Dio()).getWeather(cityName);
-      emit(WeatherLoadingState());
+      emit(WeatherSuccessState());
     } catch (e) {
       emit(WeatherFailureState());
     }
 
     return weatherModel;
   }
-   MaterialColor getThemeColor(String? condition) {
+
+  Future<WeatherModel> getCurrentLocationWeather() async {
+    emit(WeatherLoadingState());
+    try {
+      // You'll need to implement location service to get current location
+      // For now, using a default location like IP-based location
+      weatherModel = await WeatherService(dio: Dio()).getWeather('auto:ip');
+      emit(WeatherSuccessState());
+    } catch (e) {
+      emit(WeatherFailureState());
+    }
+
+    return weatherModel;
+  }
+
+  MaterialColor getThemeColor(String? condition) {
     if (condition == null) {
       return Colors.blue;
     }

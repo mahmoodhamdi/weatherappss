@@ -1,115 +1,141 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:weatherapps/cubit/weather_cubit.dart';
+import 'package:weatherapps/cubit/weather_page_state.dart';
 import 'package:weatherapps/screens/search_page.dart';
+import 'package:weatherapps/widgets/loading_animation.dart';
+import 'package:weatherapps/widgets/weather_card.dart';
 
 class WeatherResults extends StatelessWidget {
   const WeatherResults({super.key});
   static const String id = "weatherresults";
+
   @override
   Widget build(BuildContext context) {
+    final weatherData = BlocProvider.of<WeatherCubit>(context).weatherModel;
+
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        centerTitle: true,
-        title: const Text("Weather"),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios),
+          onPressed: () => Navigator.pop(context),
+        ),
         actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: IconButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, SearchPage.id);
-                },
-                icon: const Icon(Icons.search_outlined, size: 30)),
-          )
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () => Navigator.pushNamed(context, SearchPage.id),
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () async {
+              try {
+                await BlocProvider.of<WeatherCubit>(context)
+                    .getCurrentWeather(weatherData.name);
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Error refreshing weather data'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+          ),
         ],
       ),
       body: Container(
         decoration: BoxDecoration(
-            gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-              BlocProvider.of<WeatherCubit>(context).getThemeColor(
-                  BlocProvider.of<WeatherCubit>(context)
-                      .weatherModel
-                      .conditionText)[400]!,
-              BlocProvider.of<WeatherCubit>(context).getThemeColor(
-                  BlocProvider.of<WeatherCubit>(context)
-                      .weatherModel
-                      .conditionText)[300]!,
-              Colors.white
-            ])),
-        child: Column(
-          children: [
-            const Spacer(
-              flex: 5,
-            ),
-            Column(
-              children: [
-                Text(
-                  BlocProvider.of<WeatherCubit>(context).weatherModel.name,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 32),
-                ),
-                Text(
-                  BlocProvider.of<WeatherCubit>(context)
-                      .weatherModel
-                      .localtime
-                      .replaceRange(0, 10, "updated at"),
-                  style: const TextStyle(fontSize: 24),
-                ),
-              ],
-            ),
-            const SizedBox(
-              height: 32,
-            ),
-            const Spacer(
-              flex: 1,
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Spacer(
-                  flex: 1,
-                ),
-                Image.network(
-                  "http:${BlocProvider.of<WeatherCubit>(context).weatherModel.conditionIcon}",
-                ),
-                const Spacer(
-                  flex: 2,
-                ),
-                Text(BlocProvider.of<WeatherCubit>(context).weatherModel.temp,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 32)),
-                const Spacer(
-                  flex: 1,
-                ),
-                Column(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Theme.of(context).colorScheme.primary.withOpacity(0.8),
+              Theme.of(context).colorScheme.secondary.withOpacity(0.6),
+              Theme.of(context).colorScheme.surface,
+            ],
+          ),
+        ),
+        child: BlocBuilder<WeatherCubit, WeatherState>(
+          builder: (context, state) {
+            if (state is WeatherLoadingState) {
+              return const LoadingAnimation();
+            }
+
+            if (state is WeatherFailureState) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    const Icon(
+                      Icons.error_outline,
+                      size: 60,
+                      color: Colors.red,
+                    ),
                     Text(
-                        "max temp: ${BlocProvider.of<WeatherCubit>(context).weatherModel.maxTemp}",
-                        style: const TextStyle(fontSize: 16)),
-                    Text(
-                        "min temp: ${BlocProvider.of<WeatherCubit>(context).weatherModel.minTemp}",
-                        style: const TextStyle(fontSize: 16)),
+                      'Something went wrong',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    TextButton(
+                      onPressed: () =>
+                          Navigator.pushNamed(context, SearchPage.id),
+                      child: const Text('Try Again'),
+                    ),
                   ],
                 ),
-                const Spacer(
-                  flex: 1,
+              );
+            }
+
+            if (state is WeatherSuccessState) {
+              return SafeArea(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          weatherData.name,
+                          style:
+                              Theme.of(context).textTheme.headlineLarge?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Last Updated: ${weatherData.localtime}',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Colors.white70,
+                              ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 24),
+                        WeatherCard(
+                          temperature: weatherData.temp,
+                          condition: weatherData.conditionText,
+                          icon: weatherData.conditionIcon,
+                          maxTemp: weatherData.maxTemp,
+                          minTemp: weatherData.minTemp,
+                          humidity: weatherData.humidity ?? '0',
+                          windSpeed: weatherData.windSpeed ?? '0',
+                          lastUpdated: DateTime.parse(weatherData.localtime),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ],
-            ),
-            const Spacer(
-              flex: 2,
-            ),
-            Text(
-              BlocProvider.of<WeatherCubit>(context).weatherModel.conditionText,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 32),
-            ),
-            const Spacer(
-              flex: 4,
-            ),
-          ],
+              );
+            }
+
+            return const SizedBox();
+          },
         ),
       ),
     );
