@@ -25,21 +25,25 @@ A sleek and intuitive weather application built with Flutter, providing real-tim
 ### Installation
 
 1. Clone the repository:
+
 ```bash
-git clone https://github.com/yourusername/weatherappss.git
+git clone https://github.com/mahmoodhamdi/weatherappss.git
 ```
 
 2. Navigate to the project directory:
+
 ```bash
 cd weatherappss
 ```
 
 3. Install dependencies:
+
 ```bash
 flutter pub get
 ```
 
 4. Run the app:
+
 ```bash
 flutter run
 ```
@@ -52,7 +56,11 @@ flutter run
 
 ## 📱 Screenshots
 
-[Coming Soon]
+<div align="center">
+  <img src="Simulator Screenshot - iPhone 11 Pro Max - 2024-11-30 at 17.50.58.png" alt="Weather App Screenshot 1" width="250"/>
+  <img src="Simulator Screenshot - iPhone 11 Pro Max - 2024-11-30 at 17.51.03.png" alt="Weather App Screenshot 2" width/Users/ashwah/Desktop/search-result.png /Users/ashwah/Desktop/search.png /Users/ashwah/Desktop/home.png="250"/>
+  <img src="Simulator Screenshot - iPhone 11 Pro Max - 2024-11-30 at 17.51.09.png" alt="Weather App Screenshot 3" width="250"/>
+</div>
 
 ## 🤝 Contributing
 
